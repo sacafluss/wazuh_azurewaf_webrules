@@ -1,6 +1,6 @@
 <!-- Modify it at your will. -->
 
-<group name="3gazuregateway, azuregateway, accesslog,">
+<group name="azuregateway,accesslog,web,">
   <rule id="103000" level="0">
     <if_sid>87801</if_sid>
     <field name="Category">^ApplicationGatewayAccessLog$</field>
