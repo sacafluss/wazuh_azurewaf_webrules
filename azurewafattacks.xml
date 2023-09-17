@@ -3,7 +3,9 @@
 <group name="3gazuregateway, azuregateway, accesslog,">
   <rule id="103000" level="0">
     <if_sid>87801</if_sid>
-    <field name="Resource">^nameofyourappgateway</field>
+    <field name="Category">^ApplicationGatewayAccessLog$</field>
+<!-- If you manage different App Gateways, then better use the next line to get just the one you want -->
+<!-- <field name="Resource">^nameofyourappgateway</field> -->
     <description>Azure Gateway Log.</description>
   </rule>
   <rule id="103008" level="4">
