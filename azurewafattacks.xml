@@ -1,0 +1,343 @@
+<!-- Modify it at your will. -->
+
+<group name="3gazuregateway, azuregateway, accesslog,">
+  <rule id="103000" level="0">
+    <if_sid>87801</if_sid>
+    <field name="Resource">^nameofyourappgateway</field>
+    <description>Azure Gateway Log.</description>
+  </rule>
+  <rule id="103008" level="4">
+    <if_sid>87801</if_sid>
+    <field name="httpStatus_d">^2|^3</field>
+    <description>Ignored URLs (simple queries).</description>
+  </rule>
+
+  <rule id="103001" level="5">
+    <if_sid>103000</if_sid>
+    <field name="httpStatus_d">^4</field>
+    <description>Web server 400 error code.</description>
+    <group>attack,pci_dss_6.5,pci_dss_11.4,gdpr_IV_35.7.d,nist_800_53_SA.11,nist_800_53_SI.4,tsc_CC6.6,tsc_CC7.1,tsc_CC8.1,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+  <rule id="103003" level="7">
+    <if_sid>103000,103008</if_sid>
+    <field name="originalRequestUriWithArgs_s">=select%20|select+|insert%20|%20from%20|%20where%20|union%20|</field>
+    <field name="originalRequestUriWithArgs_s">union+|where+|null,null|xp_cmdshell</field>
+    <description>SQL injection attempt.</description>
+    <mitre>
+      <id>T1190</id>
+    </mitre>
+    <group>attack,sql_injection,pci_dss_6.5,pci_dss_11.4,pci_dss_6.5.1,gdpr_IV_35.7.d,nist_800_53_SA.11,nist_800_53_SI.4,tsc_CC6.6,tsc_CC7.1,tsc_CC8.1,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+    <!-- Attempt to do directory transversal, simple sql injections,
+      -  or access to the etc or bin directory (unix). -->
+  <rule id="103004" level="6">
+    <if_sid>103000</if_sid>
+    <field name="originalRequestUriWithArgs_s">echo;|cmd.exe|root.exe|_mem_bin|msadc|/winnt/|/boot.ini|/x90/|default.ida|/sumthin|nsiislog.dll|chmod%|wget%|cd%20|exec%20</field>
+    <description>Common web attack.</description>
+    <mitre>
+      <id>T1055</id>
+      <id>T1083</id>
+      <id>T1190</id>
+    </mitre>
+    <group>attack,pci_dss_6.5,pci_dss_11.4,pci_dss_6.5.1,gdpr_IV_35.7.d,nist_800_53_SA.11,nist_800_53_SI.4,tsc_CC6.6,tsc_CC7.1,tsc_CC8.1,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+
+  <rule id="103005" level="6">
+    <if_sid>103000</if_sid>
+    <field name="originalRequestUriWithArgs_s">%3Cscript|%3C%2Fscript|script>|script%3E|SRC=javascript|IMG%20|</field>
+    <field name="originalRequestUriWithArgs_s">%20ONLOAD=|INPUT%20|iframe%20</field>
+    <description>XSS (Cross Site Scripting) attempt.</description>
+    <mitre>
+      <id>T1059.007</id>
+    </mitre>
+    <group>attack,pci_dss_6.5,pci_dss_11.4,pci_dss_6.5.7,gdpr_IV_35.7.d,nist_800_53_SA.11,nist_800_53_SI.4,tsc_CC6.6,tsc_CC7.1,tsc_CC8.1,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+
+  <rule id="103006" level="6">
+    <if_sid>103003, 103004, 103005</if_sid>
+    <field name="httpStatus_d">^200</field>
+    <description>A web attack returned code 200 (success).</description>
+    <mitre>
+      <id>T1190</id>
+    </mitre>
+    <group>attack,pci_dss_6.5,pci_dss_11.4,gdpr_IV_35.7.d,nist_800_53_SA.11,nist_800_53_SI.4,tsc_CC6.6,tsc_CC7.1,tsc_CC8.1,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+
+  <rule id="103010" level="6">
+    <if_sid>103000</if_sid>
+    <field name="originalRequestUriWithArgs_s">?-d|?-s|?-a|?-b|?-w</field>
+    <description>PHP CGI-bin vulnerability attempt.</description>
+    <mitre>
+      <id>T1210</id>
+    </mitre>
+    <group>attack,pci_dss_6.5,pci_dss_11.4,gdpr_IV_35.7.d,nist_800_53_SA.11,nist_800_53_SI.4,tsc_CC6.6,tsc_CC7.1,tsc_CC8.1,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+
+  <rule id="103009" level="6">
+    <if_sid>103000</if_sid>
+    <field name="originalRequestUriWithArgs_s">+as+varchar</field>
+    <regex>%2Bchar\(\d+\)%2Bchar\(\d+\)%2Bchar\(\d+\)%2Bchar\(\d+\)%2Bchar\(\d+\)%2Bchar\(\d+\)</regex>
+    <description>MSSQL Injection attempt (/ur.php, urchin.js)</description>
+    <mitre>
+      <id>T1190</id>
+    </mitre>
+    <group>attack,pci_dss_6.5,pci_dss_11.4,pci_dss_6.5.1,gdpr_IV_35.7.d,nist_800_53_SA.11,nist_800_53_SI.4,tsc_CC6.6,tsc_CC7.1,tsc_CC8.1,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+
+
+  <!-- If your site have a search engine, you may need to ignore
+    - it in here.
+    -->
+  <rule id="103007" level="0">
+    <if_sid>103003, 103004, 103005</if_sid>
+    <field name="originalRequestUriWithArgs_s">^/search.php?search=|^/index.php?searchword=</field>
+    <description>Ignored URLs for the web attacks</description>
+  </rule>
+
+  <rule id="103015" level="13" maxsize="7900">
+    <if_sid>103000</if_sid>
+    <description>URL too long. Higher than allowed on most </description>
+    <description>browsers. Possible attack.</description>
+    <mitre>
+      <id>T1499</id>
+    </mitre>
+    <group>invalid_access,pci_dss_6.5,pci_dss_11.4,pci_dss_6.5.8,pci_dss_10.2.4,gdpr_IV_35.7.d,hipaa_164.312.b,nist_800_53_SA.11,nist_800_53_SI.4,nist_800_53_AU.14,nist_800_53_AC.7,tsc_CC6.6,tsc_CC7.1,tsc_CC8.1,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+
+
+  <!-- 500 error codes, server error
+    - http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+    -->
+  <rule id="103020" level="5">
+    <if_sid>103000</if_sid>
+    <field name="httpStatus_d">^50</field>
+    <description>Web server 500 error code (server error).</description>
+  </rule>
+
+  <rule id="103021" level="4">
+    <if_sid>103020</if_sid>
+    <field name="httpStatus_d">^501</field>
+    <description>Web server 501 error code (Not Implemented).</description>
+  </rule>
+
+  <rule id="103022" level="5">
+    <if_sid>103020</if_sid>
+    <field name="httpStatus_d">500</field>
+    <description>Web server 500 error code (Internal Error).</description>
+    <group>system_error,</group>
+  </rule>
+
+  <rule id="103023" level="4">
+    <if_sid>103020</if_sid>
+    <field name="httpStatus_d">^503</field>
+    <description>Web server 503 error code (Service unavailable).</description>
+  </rule>
+
+
+  <!-- Rules to ignore crawlers 
+  <rule id="103040" level="0">
+    <if_sid>103001</if_sid>
+    <compiled_rule>is_valid_crawler</compiled_rule>
+    <description>Ignoring google/msn/yahoo bots.</description>
+  </rule>
+  -->
+
+  <!-- Ignoring nginx 499's 
+  <rule id="103041" level="0">
+    <if_sid>103001</if_sid>
+    <field name="httpStatus_d">^499</field>
+    <description>Ignored 499's on nginx.</description>
+  </rule>
+  -->
+
+<!--
+  <rule id="103051" level="10" frequency="14" timeframe="90">
+    <if_matched_sid>103001</if_matched_sid>
+    <same_source_ip />
+    <description>Multiple web server 400 error codes </description>
+    <description>from same source ip.</description>
+    <mitre>
+      <id>T1595.002</id>
+    </mitre>
+    <group>web_scan,recon,pci_dss_6.5,pci_dss_11.4,gdpr_IV_35.7.d,nist_800_53_SA.11,nist_800_53_SI.4,tsc_CC6.6,tsc_CC7.1,tsc_CC8.1,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+-->
+  <rule id="103052" level="10" frequency="8" timeframe="120">
+    <if_matched_sid>103003</if_matched_sid>
+    <same_source_ip />
+    <description>Multiple SQL injection attempts from same </description>
+    <description>source ip.</description>
+    <mitre>
+      <id>T1055</id>
+    </mitre>
+    <group>attack,sql_injection,pci_dss_6.5,pci_dss_11.4,pci_dss_6.5.1,gdpr_IV_35.7.d,nist_800_53_SA.11,nist_800_53_SI.4,tsc_CC6.6,tsc_CC7.1,tsc_CC8.1,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+
+  <rule id="103053" level="10" frequency="10" timeframe="120">
+    <if_matched_sid>103004</if_matched_sid>
+    <same_source_ip />
+    <description>Multiple common web attacks from same source ip.</description>
+    <mitre>
+      <id>T1055</id>
+      <id>T1083</id>
+    </mitre>
+    <group>attack,pci_dss_6.5,pci_dss_11.4,gdpr_IV_35.7.d,nist_800_53_SA.11,nist_800_53_SI.4,tsc_CC6.6,tsc_CC7.1,tsc_CC8.1,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+
+  <rule id="103054" level="10" frequency="10" timeframe="120">
+    <if_matched_sid>103005</if_matched_sid>
+    <same_source_ip />
+    <description>Multiple XSS (Cross Site Scripting) attempts </description>
+    <description>from same source ip.</description>
+    <mitre>
+      <id>T1059</id>
+    </mitre>
+    <group>attack,pci_dss_6.5,pci_dss_11.4,pci_dss_6.5.7,gdpr_IV_35.7.d,nist_800_53_SA.11,nist_800_53_SI.4,tsc_CC6.6,tsc_CC7.1,tsc_CC8.1,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+
+  <rule id="103061" level="10" frequency="14" timeframe="120">
+    <if_matched_sid>103021</if_matched_sid>
+    <same_source_ip />
+    <description>Multiple web server 501 error code (Not Implemented).</description>
+    <mitre>
+      <id>T1595.002</id>
+    </mitre>
+    <group>web_scan,recon,pci_dss_6.5,pci_dss_11.4,gdpr_IV_35.7.d,nist_800_53_SA.11,nist_800_53_SI.4,tsc_CC6.6,tsc_CC7.1,tsc_CC8.1,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+
+  <rule id="103062" level="10" frequency="14" timeframe="120">
+    <if_matched_sid>103022</if_matched_sid>
+    <same_source_ip />
+    <description>Multiple web server 500 error code (Internal Error).</description>
+    <group>system_error,pci_dss_6.5,pci_dss_10.6.1,gdpr_IV_35.7.d,hipaa_164.312.b,nist_800_53_SA.11,nist_800_53_AU.6,tsc_CC6.6,tsc_CC7.1,tsc_CC8.1,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+
+  <rule id="103063" level="10" frequency="14" timeframe="120">
+    <if_matched_sid>103023</if_matched_sid>
+    <same_source_ip />
+    <description>Multiple web server 503 error code (Service unavailable).</description>
+    <mitre>
+      <id>T1498</id>
+    </mitre>
+    <group>web_scan,recon,pci_dss_6.5,pci_dss_11.4,pci_dss_10.6.1,gdpr_IV_35.7.d,hipaa_164.312.b,nist_800_53_SA.11,nist_800_53_SI.4,nist_800_53_AU.6,tsc_CC6.6,tsc_CC7.1,tsc_CC8.1,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+
+  <rule id="103064" level="6">
+    <if_sid>103000</if_sid>
+    <field name="originalRequestUriWithArgs_s">=%27|select%2B|insert%2B|%2Bfrom%2B|%2Bwhere%2B|%2Bunion%2B</field>
+    <description>SQL injection attempt.</description>
+    <mitre>
+      <id>T1055</id>
+      <id>T1190</id>
+    </mitre>
+    <group>attack,sqlinjection,attack,pci_dss_6.5,pci_dss_11.4,pci_dss_6.5.1,gdpr_IV_35.7.d,nist_800_53_SA.11,nist_800_53_SI.4,tsc_CC6.6,tsc_CC7.1,tsc_CC8.1,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+
+  <rule id="103065" level="6">
+    <if_sid>103000</if_sid>
+    <field name="originalRequestUriWithArgs_s">%EF%BC%87|%EF%BC%87|%EF%BC%87|%2531|%u0053%u0045</field>
+    <description>SQL injection attempt.</description>
+    <mitre>
+      <id>T1055</id>
+      <id>T1190</id>
+    </mitre>
+    <group>attack,sqlinjection,pci_dss_6.5,pci_dss_11.4,pci_dss_6.5.1,gdpr_IV_35.7.d,nist_800_53_SA.11,nist_800_53_SI.4,tsc_CC6.6,tsc_CC7.1,tsc_CC8.1,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+
+<!--
+    Shellshock detected
+    Pattern: "(){:;};" (with spaces)
+    Decoder: web-accesslog_decoders.xml
+
+    Examples:
+    192.168.2.100 - - [02/Nov/2015:01:35:55 +0100] "GET /cgi-bin/test.sh HTTP/1.1" 404 292 "-" "() { :;};/usr/bin/perl ..."
+    192.168.2.100 - - [02/Nov/2015:01:35:55 +0100] "GET /cgi-bin/test.sh HTTP/1.1" 200 292 "-" "() { :;};/usr/bin/perl ..."
+    192.168.2.100 - - [02/Nov/2015:01:35:55 +0100] "GET /cgi-bin/test.sh HTTP/1.1" 200 292 "-" "() { foo:; };/usr/bin/perl ..."
+    192.168.2.100 - - [02/Nov/2015:01:35:55 +0100] "GET /cgi-bin/test.sh HTTP/1.1" 200 292 "-" "() { ignored; };/usr/bin/perl ..."
+    192.168.2.100 - - [02/Nov/2015:01:35:55 +0100] "GET /cgi-bin/test.sh HTTP/1.1" 200 292 "-" "() { gry; };/usr/bin/perl ..."
+
+    192.168.2.100 - - [02/Nov/2015:01:35:55 +0100] "GET /cgi-bin/test.sh HTTP/1.1" 200 292 "-" "() { _; } >_[$($())] { /usr/bin/perl ... }"
+    192.168.2.100 - - [02/Nov/2015:01:35:55 +0100] "GET /cgi-bin/test.sh HTTP/1.1" 200 292 "-" "() { _; foo; } >_[$($())] { /usr/bin/perl ... }"
+    -->
+
+  <!--
+    Shellshock attempt
+    Code: 4xx, 5xx
+  -->
+  <rule id="103066" level="6">
+    <if_sid>103001, 103020</if_sid>
+    <regex>"\(\)\s*{\s*\w*:;\s*}\s*;|"\(\)\s*{\s*\w*;\s*}\s*;</regex>
+    <description>Shellshock attack attempt</description>
+    <mitre>
+      <id>T1068</id>
+      <id>T1190</id>
+    </mitre>
+    <info type="cve">CVE-2014-6271</info>
+    <info type="link">https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2014-6271</info>
+    <group>attack,pci_dss_11.4,gdpr_IV_35.7.d,nist_800_53_SI.4,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+
+  <rule id="103067" level="6">
+    <if_sid>103001, 103020</if_sid>
+    <regex>"\(\)\s*{\s*_;\.*}\s*>_[\$\(\$\(\)\)]\s*{</regex>
+    <description>Shellshock attack attempt</description>
+    <mitre>
+      <id>T1068</id>
+      <id>T1190</id>
+    </mitre>
+    <info type="cve">CVE-2014-6278</info>
+    <info type="link">https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2014-6278</info>
+    <group>attack,pci_dss_11.4,gdpr_IV_35.7.d,nist_800_53_SI.4,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+
+  <!--
+    Shellshock detected
+    Code: 2xx, 3xx
+  -->
+  <rule id="103068" level="15">
+    <if_sid>103008</if_sid>
+    <regex>"\(\)\s*{\s*\w*:;\s*}\s*;|"\(\)\s*{\s*\w*;\s*}\s*;</regex>
+    <description>Shellshock attack detected</description>
+    <mitre>
+      <id>T1068</id>
+      <id>T1190</id>
+    </mitre>
+    <info type="cve">CVE-2014-6271</info>
+    <info type="link">https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2014-6271</info>
+    <group>attack,pci_dss_11.4,gdpr_IV_35.7.d,nist_800_53_SI.4,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+
+  <rule id="103069" level="15">
+    <if_sid>103008</if_sid>
+    <regex>"\(\)\s*{\s*_;\.*}\s*>_[\$\(\$\(\)\)]\s*{</regex>
+    <description>Shellshock attack detected</description>
+    <mitre>
+      <id>T1068</id>
+      <id>T1190</id>
+    </mitre>
+    <info type="cve">CVE-2014-6278</info>
+    <info type="link">https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2014-6278</info>
+    <group>attack,pci_dss_11.4,gdpr_IV_35.7.d,nist_800_53_SI.4,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+
+  <rule id="103070" level="6">
+    <if_sid>103000</if_sid>
+    <field name="originalRequestUriWithArgs_s">%2csleep|sysdate()|nslookup%20dns.sqli</field>
+    <description>SQL injection attempt.</description>
+    <group>attack,sqlinjection,pci_dss_6.5,pci_dss_11.4,pci_dss_6.5.1,gdpr_IV_35.7.d,</group>
+  </rule>
+
+  <rule id="103071" level="6">
+   <if_sid>103000</if_sid>
+   <field name="originalRequestUriWithArgs_s">select%20|insert%20</field>
+   <description>SQL injection attempt.</description>
+   <group>attack,sqlinjection,pci_dss_6.5,pci_dss_11.4,pci_dss_6.5.1,gdpr_IV_35.7.d,</group>
+  </rule>
+<!-- Block Blacklist -->
+  <rule id="103999" level="12">
+    <if_sid>103003,103005,103009,103052,103054,103064,103065,103068,103069,103070,103071</if_sid>
+    <field name="httpStatus_d" negate="yes">^301|^403</field>
+    <description>SOC AppGateway Active Response Triggered</description>
+    <group>wafar,wafar120,blacklistblock,</group>
+  </rule>
+</group>
