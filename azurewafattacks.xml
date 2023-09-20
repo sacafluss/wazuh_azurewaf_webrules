@@ -1,7 +1,7 @@
 <!-- Modify it at your will. -->
 
 <group name="azuregateway,accesslog,web,">
-  <rule id="103000" level="0">
+  <rule id="103000" level="3">
     <if_sid>87801</if_sid>
     <field name="Category">^ApplicationGatewayAccessLog$</field>
 <!-- If you manage different App Gateways, then better use the next line to get just the one you want -->
